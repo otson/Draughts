@@ -41,7 +41,7 @@ class Game implements Runnable, MouseListener {
     private boolean useDefaultIpAndPort = true;
     private Scanner scanner = new Scanner(System.in);
     private String ip = "localhost";
-    private int port = 55555;
+    private int port = 55554;
 
     private Socket socket;
     private ObjectOutputStream oos;
@@ -123,7 +123,7 @@ class Game implements Runnable, MouseListener {
                 try {
                     //int[] updatedPieces = (int[]) ois.readObject();
                     //System.arraycopy(updatedPieces, 0, pieces, 0, pieces.length);
-                    
+
                     pieces = (int[]) ois.readObject();
                     painter.setPieces(pieces);
                 } catch (ClassNotFoundException ex) {
@@ -197,15 +197,14 @@ class Game implements Runnable, MouseListener {
                 int y = e.getY() / Painter.CELL_SIZE;
 
                 if (!pieceSelected) {
-                    if (isMovablePiece(x, y)) {
+                    if (isSelectablePiece(x, y)) {
                         selectedPiece = y * BOARD_SIZE + x;
                         //System.out.println("Selected valid piece x: " + x + ", y: " + y);
                         pieceSelected = true;
                     }
                 } else {
-                    if (isValidMove(x, y)) {
-                        System.out.println("Valid target.");
-                        move(x, y);
+                    if (tryToMove(x, y)) {
+                        
                         pieceSelected = false;
                         selectedPiece = -1;
                         yourTurn = false;
@@ -213,7 +212,7 @@ class Game implements Runnable, MouseListener {
                         Toolkit.getDefaultToolkit().sync();
 
                         try {
-                            
+
                             oos.writeObject(pieces);
                             oos.flush();
                             System.out.println("DATA WAS SENT");
@@ -222,7 +221,6 @@ class Game implements Runnable, MouseListener {
                             e1.printStackTrace();
                         }
 
-                        
                         checkForWin();
                         checkForTie();
 
@@ -247,33 +245,17 @@ class Game implements Runnable, MouseListener {
 
     }
 
-    private boolean isMovablePiece(int x, int y) {
+    private boolean isSelectablePiece(int x, int y) {
         int cell = y * BOARD_SIZE + x;
         if (player_one) {
-            if (pieces[cell] != 1) {
-                return false;
-            }
-            if (y != 0 && x != 0 && x != BOARD_SIZE - 1) {
-                if (pieces[(y - 1) * 10 + x - 1] == 0 || pieces[(y - 1) * 10 + x + 1] == 0) {
-                    return true;
-                }
-            }
-            return false;
+            return (pieces[cell] == 1);
 
         } else {
-            if (pieces[cell] != 2) {
-                return false;
-            }
-            if (y != BOARD_SIZE - 1 && x != 0 && x != BOARD_SIZE - 1) {
-                if (pieces[(y + 1) * 10 + x - 1] == 0 || pieces[(y + 1) * 10 + x + 1] == 0) {
-                    return true;
-                }
-            }
-            return false;
+            return (pieces[cell] == 2);
         }
     }
 
-    private boolean isValidMove(int targetX, int targetY) {
+    private boolean tryToMove(int targetX, int targetY) {
         int startX = selectedPiece % BOARD_SIZE;
         int startY = (int) selectedPiece / BOARD_SIZE;
         //System.out.println("Start: " + startX + " " + startY);
@@ -283,12 +265,67 @@ class Game implements Runnable, MouseListener {
 
         if (pieces[targetID] == 0) {
             if (player_one) {
+                // no eating
                 if (targetY + 1 == startY && (targetX - 1 == startX || targetX + 1 == startX)) {
+                    move(targetX, targetY);
                     return true;
                 }
+                // eating
+                //up-right
+                else if (targetY + 2 == startY && targetX + 2 == startX && pieces[(targetY + 1) * BOARD_SIZE + targetX + 1] == 2){
+                        move(targetX, targetY);
+                        pieces[(targetY + 1) * BOARD_SIZE + targetX + 1] = 0;
+                        return true;
+                }
+                //up-left
+                else if (targetY + 2 == startY && targetX - 2 == startX && pieces[(targetY + 1) * BOARD_SIZE + targetX - 1] == 2){
+                        move(targetX, targetY);
+                        pieces[(targetY + 1) * BOARD_SIZE + targetX - 1] = 0;
+                        return true;
+                }
+                //down-right
+                else if (targetY - 2 == startY && targetX + 2 == startX && pieces[(targetY - 1) * BOARD_SIZE + targetX + 1] == 2){
+                        move(targetX, targetY);
+                        pieces[(targetY - 1) * BOARD_SIZE + targetX + 1] = 0;
+                        return true;
+                }
+                //down-left
+                else if (targetY - 2 == startY && targetX - 2 == startX && pieces[(targetY - 1) * BOARD_SIZE + targetX - 1] == 2){
+                        move(targetX, targetY);
+                        pieces[(targetY - 1) * BOARD_SIZE + targetX - 1] = 0;
+                        return true;
+                }
+
             } else {
+                // no eating
                 if (targetY - 1 == startY && (targetX - 1 == startX || targetX + 1 == startX)) {
+                    move(targetX, targetY);
                     return true;
+                }
+                //up-right
+                else if (targetY + 2 == startY && targetX + 2 == startX && pieces[(targetY + 1) * BOARD_SIZE + targetX + 1] == 1){
+                        move(targetX, targetY);
+                        pieces[(targetY + 1) * BOARD_SIZE + targetX + 1] = 0;
+                        return true;
+                }
+                //up-left
+                else if (targetY + 2 == startY && targetX - 2 == startX && pieces[(targetY + 1) * BOARD_SIZE + targetX - 1] == 1){
+                        move(targetX, targetY);
+                        pieces[(targetY + 1) * BOARD_SIZE + targetX - 1] = 0;
+                        return true;
+                }
+                //eating
+                //down-right
+                else if (targetY - 2 == startY && targetX + 2 == startX && pieces[(targetY - 1) * BOARD_SIZE + targetX + 1] == 1){
+                        move(targetX, targetY);
+                        pieces[(targetY - 1) * BOARD_SIZE + targetX + 1] = 0;
+                        return true;
+                }
+                //down-left
+                else if (targetY - 2 == startY && targetX - 2 == startX && pieces[(targetY - 1) * BOARD_SIZE + targetX - 1] == 1){
+                        move(targetX, targetY);
+                        pieces[(targetY - 1) * BOARD_SIZE + targetX - 1] = 0;
+                        return true;
                 }
             }
         }
@@ -342,7 +379,5 @@ class Game implements Runnable, MouseListener {
     public boolean isPieceSelected() {
         return pieceSelected;
     }
-    
-    
 
 }
