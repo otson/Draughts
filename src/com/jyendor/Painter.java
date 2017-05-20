@@ -16,14 +16,13 @@
  */
 package com.jyendor;
 
+import java.awt.BasicStroke;
 import java.awt.Color;
 import java.awt.Dimension;
 import java.awt.Font;
 import java.awt.Graphics;
 import java.awt.Graphics2D;
 import java.awt.RenderingHints;
-import java.awt.event.MouseEvent;
-import java.awt.event.MouseListener;
 import javax.swing.JFrame;
 import javax.swing.JPanel;
 
@@ -41,13 +40,16 @@ class Painter extends JPanel {
     private final int PIECE_SIZE = 60;
     private final JFrame frame;
     private final int BOARD_SIZE;
-    private final int[] pieces;
+    private int[] pieces;
     private boolean highlightedCells[];
 
     private final Color DARK_CELL_COLOR = Color.decode("#60341f");
     private final Color LIGHT_CELL_COLOR = Color.decode("#c9b898");
     private final Color PLAYER_ONE_COLOR = Color.decode("#d6b18b");
     private final Color PLAYER_TWO_COLOR = Color.decode("#281413");
+    private final Color SELECTED_CELL_COLOR = Color.RED;
+    
+    private int selected_cell_border_width = 3;
     
     private final Font font = new Font("Verdana", Font.BOLD, 40);
     
@@ -95,6 +97,14 @@ class Painter extends JPanel {
         if (game.isAccepted()) {
             if(game.isYourTurn()){
                 frame.setTitle(YOUR_TURN_TITLE);
+                if(game.isPieceSelected()){
+                    g.setColor(SELECTED_CELL_COLOR);
+                    int x = game.getSelectedPiece()%BOARD_SIZE;
+                    int y = (int)game.getSelectedPiece()/BOARD_SIZE;
+                    Graphics2D g2 = (Graphics2D) g;
+                    g2.setStroke(new BasicStroke(selected_cell_border_width));
+                    g.drawRect(x * CELL_SIZE, y * CELL_SIZE, CELL_SIZE, CELL_SIZE);
+                }
             }
             else{
                 frame.setTitle(OPPONENT_TURN_TITLE);
@@ -122,4 +132,10 @@ class Painter extends JPanel {
             g.drawString(waitingString, BOARD_SIZE*CELL_SIZE / 2 - stringWidth / 2, BOARD_SIZE*CELL_SIZE / 2);
         }
     }
+
+    public void setPieces(int[] pieces) {
+        this.pieces = pieces;
+    }
+    
+    
 }

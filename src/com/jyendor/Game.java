@@ -56,6 +56,10 @@ class Game implements Runnable, MouseListener {
     private boolean accepted = false;
     private boolean player_one = false;
 
+    private int selectedPiece = -1;
+    private int cellToMoveTo = -1;
+    private boolean pieceSelected = false;
+
     private int errors = 0;
 
     public Game() {
@@ -117,16 +121,11 @@ class Game implements Runnable, MouseListener {
         if (!yourTurn && !unableToCommunicateWithOpponent) {
             try {
                 try {
-                    int[] updatedPieces = (int[]) ois.readObject();
-                    System.arraycopy(updatedPieces, 0, pieces, 0, pieces.length);
-                    int ones = 0;
-                    int twos = 0;
-                    for(int i = 0; i<pieces.length;i++){
-                        if(pieces[i] == 1) ones++;
-                        else if(pieces[i] == 2) twos++;
-                        
-                        System.out.println("Ones: "+ones+", twos: "+twos+".");
-                    }
+                    //int[] updatedPieces = (int[]) ois.readObject();
+                    //System.arraycopy(updatedPieces, 0, pieces, 0, pieces.length);
+                    
+                    pieces = (int[]) ois.readObject();
+                    painter.setPieces(pieces);
                 } catch (ClassNotFoundException ex) {
                     ex.printStackTrace();
                 }
@@ -158,7 +157,7 @@ class Game implements Runnable, MouseListener {
             oos = new ObjectOutputStream(socket.getOutputStream());
             ois = new ObjectInputStream(socket.getInputStream());
             accepted = true;
-            
+
         } catch (IOException e) {
             System.out.println("Unable to connect to address: " + ip + ":" + port + ". Starting a server.");
             return false;
@@ -196,27 +195,104 @@ class Game implements Runnable, MouseListener {
             if (yourTurn && !unableToCommunicateWithOpponent && !won && !opponentWon) {
                 int x = e.getX() / Painter.CELL_SIZE;
                 int y = e.getY() / Painter.CELL_SIZE;
-                System.out.println("x: " + x + ", y: " + y);
-                
-                pieces[y*BOARD_SIZE+x] = player_one ? 1 : 2;
-                yourTurn = false;
-                painter.repaint();
-                Toolkit.getDefaultToolkit().sync();
 
-                try {
-                    oos.writeObject(pieces);
-                    oos.flush();
-                } catch (IOException e1) {
-                    errors++;
-                    e1.printStackTrace();
+                if (!pieceSelected) {
+                    if (isMovablePiece(x, y)) {
+                        selectedPiece = y * BOARD_SIZE + x;
+                        //System.out.println("Selected valid piece x: " + x + ", y: " + y);
+                        pieceSelected = true;
+                    }
+                } else {
+                    if (isValidMove(x, y)) {
+                        System.out.println("Valid target.");
+                        move(x, y);
+                        pieceSelected = false;
+                        selectedPiece = -1;
+                        yourTurn = false;
+                        painter.repaint();
+                        Toolkit.getDefaultToolkit().sync();
+
+                        try {
+                            
+                            oos.writeObject(pieces);
+                            oos.flush();
+                            System.out.println("DATA WAS SENT");
+                        } catch (IOException e1) {
+                            errors++;
+                            e1.printStackTrace();
+                        }
+
+                        
+                        checkForWin();
+                        checkForTie();
+
+                    }
+                    pieceSelected = false;
+                    selectedPiece = -1;
                 }
 
-                System.out.println("DATA WAS SENT");
-                checkForWin();
-                checkForTie();
             }
 
         }
+    }
+
+    private void move(int x, int y) {
+        //System.out.println("Moving piece.");
+        pieces[selectedPiece] = 0;
+        if (player_one) {
+            pieces[y * BOARD_SIZE + x] = 1;
+        } else {
+            pieces[y * BOARD_SIZE + x] = 2;
+        }
+
+    }
+
+    private boolean isMovablePiece(int x, int y) {
+        int cell = y * BOARD_SIZE + x;
+        if (player_one) {
+            if (pieces[cell] != 1) {
+                return false;
+            }
+            if (y != 0 && x != 0 && x != BOARD_SIZE - 1) {
+                if (pieces[(y - 1) * 10 + x - 1] == 0 || pieces[(y - 1) * 10 + x + 1] == 0) {
+                    return true;
+                }
+            }
+            return false;
+
+        } else {
+            if (pieces[cell] != 2) {
+                return false;
+            }
+            if (y != BOARD_SIZE - 1 && x != 0 && x != BOARD_SIZE - 1) {
+                if (pieces[(y + 1) * 10 + x - 1] == 0 || pieces[(y + 1) * 10 + x + 1] == 0) {
+                    return true;
+                }
+            }
+            return false;
+        }
+    }
+
+    private boolean isValidMove(int targetX, int targetY) {
+        int startX = selectedPiece % BOARD_SIZE;
+        int startY = (int) selectedPiece / BOARD_SIZE;
+        //System.out.println("Start: " + startX + " " + startY);
+        //System.out.println("Target: " + targetX + " " + targetY);
+
+        int targetID = targetY * BOARD_SIZE + targetX;
+
+        if (pieces[targetID] == 0) {
+            if (player_one) {
+                if (targetY + 1 == startY && (targetX - 1 == startX || targetX + 1 == startX)) {
+                    return true;
+                }
+            } else {
+                if (targetY - 1 == startY && (targetX - 1 == startX || targetX + 1 == startX)) {
+                    return true;
+                }
+            }
+        }
+        return false;
     }
 
     @Override
@@ -258,5 +334,15 @@ class Game implements Runnable, MouseListener {
     public boolean isAccepted() {
         return accepted;
     }
+
+    public int getSelectedPiece() {
+        return selectedPiece;
+    }
+
+    public boolean isPieceSelected() {
+        return pieceSelected;
+    }
+    
+    
 
 }
