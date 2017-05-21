@@ -17,6 +17,8 @@
 package com.jyendor;
 
 import java.awt.Toolkit;
+import java.awt.event.ActionEvent;
+import java.awt.event.ActionListener;
 import java.awt.event.MouseEvent;
 import java.awt.event.MouseListener;
 import java.io.IOException;
@@ -25,13 +27,17 @@ import java.io.ObjectOutputStream;
 import java.net.InetAddress;
 import java.net.ServerSocket;
 import java.net.Socket;
+import java.util.ArrayList;
+import java.util.List;
 import java.util.Scanner;
+import javax.swing.JButton;
 
 /**
  *
  * @author otso
  */
-class Game implements Runnable, MouseListener {
+final class Game implements Runnable, MouseListener
+{
 
     private final Painter painter;
     private final int BOARD_SIZE = 8;
@@ -59,22 +65,30 @@ class Game implements Runnable, MouseListener {
     private int selectedPiece = -1;
     private int cellToMoveTo = -1;
     private boolean pieceSelected = false;
+    private boolean canMoveWithoutEating = false;
+    private boolean canEat = false;
 
     private int errors = 0;
+    private ArrayList<Integer> path = new ArrayList<>();
+    private ArrayList<Integer> piecesToEat = new ArrayList<>();
 
-    public Game() {
-        if (!useDefaultIpAndPort) {
+    public Game()
+    {
+        if (!useDefaultIpAndPort)
+        {
             ip = scanner.nextLine();
             System.out.println("Please input the port: ");
             port = scanner.nextInt();
-            while (port < 1 || port > 65535) {
+            while (port < 1 || port > 65535)
+            {
                 System.out.println("The port you entered is invalid, please enter another port: ");
                 port = scanner.nextInt();
             }
         }
         painter = new Painter(BOARD_SIZE, pieces, this);
-
-        if (!connect()) {
+        addButtonListener(painter.getTurnButton());
+        if (!connect())
+        {
             initializeServer();
         }
         painter.repaint();
@@ -82,14 +96,20 @@ class Game implements Runnable, MouseListener {
         thread.start();
     }
 
-    private void initializePieces() {
+    private void initializePieces()
+    {
         int pieceRows = BOARD_SIZE / 2 - 1;
-        for (int x = 0; x < BOARD_SIZE; x++) {
-            for (int y = 0; y < BOARD_SIZE; y++) {
-                if (x % 2 == 0 && y % 2 != 0 || x % 2 == 1 && y % 2 != 1) {
-                    if (y < pieceRows) {
+        for (int x = 0; x < BOARD_SIZE; x++)
+        {
+            for (int y = 0; y < BOARD_SIZE; y++)
+            {
+                if (x % 2 == 0 && y % 2 != 0 || x % 2 == 1 && y % 2 != 1)
+                {
+                    if (y < pieceRows)
+                    {
                         pieces[y * BOARD_SIZE + x] = 2;
-                    } else if (y >= BOARD_SIZE - pieceRows) {
+                    } else if (y >= BOARD_SIZE - pieceRows)
+                    {
                         pieces[y * BOARD_SIZE + x] = 1;
                     }
                 }
@@ -98,67 +118,83 @@ class Game implements Runnable, MouseListener {
     }
 
     @Override
-    public void run() {
+    public void run()
+    {
         initializePieces();
 
-        while (true) {
+        while (true)
+        {
             tick();
             painter.repaint();
 
             // If you are the server, listen if anyone is trying to join the server
-            if (player_one && !accepted) {
+            if (player_one && !accepted)
+            {
                 listenForServerRequest();
             }
         }
 
     }
 
-    private void tick() {
-        if (errors >= 10) {
+    private void tick()
+    {
+        if (errors >= 10)
+        {
             unableToCommunicateWithOpponent = true;
             return;
         }
-        if (!yourTurn && !unableToCommunicateWithOpponent) {
-            try {
-                try {
+        if (!yourTurn && !unableToCommunicateWithOpponent)
+        {
+            try
+            {
+                try
+                {
                     //int[] updatedPieces = (int[]) ois.readObject();
                     //System.arraycopy(updatedPieces, 0, pieces, 0, pieces.length);
 
                     pieces = (int[]) ois.readObject();
                     painter.setPieces(pieces);
-                } catch (ClassNotFoundException ex) {
+                } catch (ClassNotFoundException ex)
+                {
                     ex.printStackTrace();
                 }
                 checkForOpponentWin();
                 checkForTie();
                 yourTurn = true;
-            } catch (IOException e) {
+            } catch (IOException e)
+            {
                 e.printStackTrace();
                 errors++;
             }
         }
     }
 
-    private void checkForWin() {
+    private void checkForWin()
+    {
 
     }
 
-    private void checkForOpponentWin() {
+    private void checkForOpponentWin()
+    {
 
     }
 
-    private void checkForTie() {
+    private void checkForTie()
+    {
 
     }
 
-    private boolean connect() {
-        try {
+    private boolean connect()
+    {
+        try
+        {
             socket = new Socket(ip, port);
             oos = new ObjectOutputStream(socket.getOutputStream());
             ois = new ObjectInputStream(socket.getInputStream());
             accepted = true;
 
-        } catch (IOException e) {
+        } catch (IOException e)
+        {
             System.out.println("Unable to connect to address: " + ip + ":" + port + ". Starting a server.");
             return false;
         }
@@ -166,191 +202,278 @@ class Game implements Runnable, MouseListener {
         return true;
     }
 
-    private void initializeServer() {
-        try {
+    private void initializeServer()
+    {
+        try
+        {
             serverSocket = new ServerSocket(port, 8, InetAddress.getByName(ip));
-        } catch (IOException e) {
+        } catch (IOException e)
+        {
             e.printStackTrace();
         }
         player_one = true;
         yourTurn = true;
     }
 
-    private void listenForServerRequest() {
+    private void listenForServerRequest()
+    {
         Socket socket = null;
-        try {
+        try
+        {
             socket = serverSocket.accept();
             oos = new ObjectOutputStream(socket.getOutputStream());
             ois = new ObjectInputStream(socket.getInputStream());
             accepted = true;
             System.out.println("Client has requested to join and we have accepted.");
-        } catch (IOException e) {
+        } catch (IOException e)
+        {
             e.printStackTrace();
         }
     }
 
+    public void addButtonListener(JButton button)
+    {
+        button.addActionListener(new ActionListener()
+        {
+            public void actionPerformed(ActionEvent e)
+            {
+                endTurnButtonPressed();
+            }
+        });
+    }
+
+    private void endTurnButtonPressed()
+    {
+        System.out.println("Ending turn...");
+        move();
+        pieceSelected = false;
+        selectedPiece = -1;
+        yourTurn = false;
+        painter.repaint();
+        Toolkit.getDefaultToolkit().sync();
+        try
+        {
+            oos.writeObject(pieces);
+            oos.flush();
+            System.out.println("DATA WAS SENT");
+        } catch (IOException e1)
+        {
+            errors++;
+            e1.printStackTrace();
+        }
+        path.clear();
+        checkForWin();
+        checkForTie();
+    }
+
     @Override
-    public void mouseClicked(MouseEvent e) {
-        if (accepted) {
-            if (yourTurn && !unableToCommunicateWithOpponent && !won && !opponentWon) {
+    public void mouseClicked(MouseEvent e)
+    {
+        if (accepted)
+        {
+            if (yourTurn && !unableToCommunicateWithOpponent && !won && !opponentWon)
+            {
                 int x = e.getX() / Painter.CELL_SIZE;
                 int y = e.getY() / Painter.CELL_SIZE;
 
-                if (!pieceSelected) {
-                    if (isSelectablePiece(x, y)) {
+                if (!pieceSelected)
+                {
+                    if (isSelectablePiece(x, y))
+                    {
                         selectedPiece = y * BOARD_SIZE + x;
                         //System.out.println("Selected valid piece x: " + x + ", y: " + y);
                         pieceSelected = true;
+                        path.clear();
+                        path.add(selectedPiece);
+                        canMoveWithoutEating = true;
+                        canEat = true;
                     }
-                } else {
-                    if (tryToMove(x, y)) {
-
+                } else
+                {
+                    if (!tryToaddToPath(x, y))
+                    {
+                        addMessage("Selected piece cannot move there. Resetting path and selection.");
                         pieceSelected = false;
                         selectedPiece = -1;
-                        yourTurn = false;
-                        painter.repaint();
-                        Toolkit.getDefaultToolkit().sync();
-
-                        try {
-
-                            oos.writeObject(pieces);
-                            oos.flush();
-                            System.out.println("DATA WAS SENT");
-                        } catch (IOException e1) {
-                            errors++;
-                            e1.printStackTrace();
-                        }
-
-                        checkForWin();
-                        checkForTie();
-
+                        path.clear();
                     }
-                    pieceSelected = false;
-                    selectedPiece = -1;
                 }
-
             }
-
         }
     }
 
-    private void move(int x, int y) {
-        //System.out.println("Moving piece.");
-        pieces[selectedPiece] = 0;
-        if (player_one) {
-            pieces[y * BOARD_SIZE + x] = 1;
-        } else {
-            pieces[y * BOARD_SIZE + x] = 2;
-        }
-
+    private void addMessage(String text)
+    {
+        painter.getText().append(text + "\n");
     }
 
-    private boolean isSelectablePiece(int x, int y) {
+    private void addPath(int x, int y)
+    {
+        canMoveWithoutEating = false;
+        path.add(y * BOARD_SIZE + x);
+    }
+
+    private void move()
+    {
+        if (pieceSelected && !path.isEmpty())
+        {
+            pieces[selectedPiece] = 0;
+            int playerNumber = player_one ? 1 : 2;
+            pieces[path.get(path.size() - 1)] = playerNumber;
+            if (!piecesToEat.isEmpty())
+            {
+                for (int pieceToEat : piecesToEat)
+                {
+                    pieces[pieceToEat] = 0;
+                }
+            }
+        }
+    }
+
+    private boolean isSelectablePiece(int x, int y)
+    {
         int cell = y * BOARD_SIZE + x;
-        if (player_one) {
+        if (player_one)
+        {
             return (pieces[cell] == 1);
 
-        } else {
+        } else
+        {
             return (pieces[cell] == 2);
         }
     }
 
-    private boolean tryToMove(int targetX, int targetY) {
-        int startX = selectedPiece % BOARD_SIZE;
-        int startY = (int) selectedPiece / BOARD_SIZE;
+    private boolean tryToaddToPath(int targetX, int targetY)
+    {
+
+        int startX = path.get(path.size() - 1) % BOARD_SIZE;
+        int startY = (int) path.get(path.size() - 1) / BOARD_SIZE;
         //System.out.println("Start: " + startX + " " + startY);
         //System.out.println("Target: " + targetX + " " + targetY);
 
         int targetID = targetY * BOARD_SIZE + targetX;
 
-        if (pieces[targetID] == 0) {
-
-            if (player_one) {
-                // no eating
-                if (targetY + 1 == startY && (targetX - 1 == startX || targetX + 1 == startX)) {
-                    move(targetX, targetY);
-                    return true;
-                }
-            } else {
-                // no eating
-                if (targetY - 1 == startY && (targetX - 1 == startX || targetX + 1 == startX)) {
-                    move(targetX, targetY);
-                    return true;
+        if (pieces[targetID] == 0)
+        {
+            if (canMoveWithoutEating)
+            {
+                if (player_one)
+                {
+                    // no eating
+                    if (targetY + 1 == startY && (targetX - 1 == startX || targetX + 1 == startX))
+                    {
+                        canEat = false;
+                        addPath(targetX, targetY);
+                        return true;
+                    }
+                } else
+                {
+                    // no eating
+                    if (targetY - 1 == startY && (targetX - 1 == startX || targetX + 1 == startX))
+                    {
+                        canEat = false;
+                        addPath(targetX, targetY);
+                        return true;
+                    }
                 }
             }
             // eating
             //up-right
-            int opponent = player_one ? 2 : 1;
-            if (targetY + 2 == startY && targetX + 2 == startX && pieces[(targetY + 1) * BOARD_SIZE + targetX + 1] == opponent) {
-                move(targetX, targetY);
-                pieces[(targetY + 1) * BOARD_SIZE + targetX + 1] = 0;
-                return true;
-            } //up-left
-            else if (targetY + 2 == startY && targetX - 2 == startX && pieces[(targetY + 1) * BOARD_SIZE + targetX - 1] == opponent) {
-                move(targetX, targetY);
-                pieces[(targetY + 1) * BOARD_SIZE + targetX - 1] = 0;
-                return true;
-            } //down-right
-            else if (targetY - 2 == startY && targetX + 2 == startX && pieces[(targetY - 1) * BOARD_SIZE + targetX + 1] == opponent) {
-                move(targetX, targetY);
-                pieces[(targetY - 1) * BOARD_SIZE + targetX + 1] = 0;
-                return true;
-            } //down-left
-            else if (targetY - 2 == startY && targetX - 2 == startX && pieces[(targetY - 1) * BOARD_SIZE + targetX - 1] == opponent) {
-                move(targetX, targetY);
-                pieces[(targetY - 1) * BOARD_SIZE + targetX - 1] = 0;
-                return true;
+            if (canEat)
+            {
+                int opponent = player_one ? 2 : 1;
+                if (targetY + 2 == startY && targetX + 2 == startX && pieces[(targetY + 1) * BOARD_SIZE + targetX + 1] == opponent)
+                {
+                    addPath(targetX, targetY);
+                    piecesToEat.add((targetY + 1) * BOARD_SIZE + targetX + 1);
+                    return true;
+                } //up-left
+                else if (targetY + 2 == startY && targetX - 2 == startX && pieces[(targetY + 1) * BOARD_SIZE + targetX - 1] == opponent)
+                {
+                    addPath(targetX, targetY);
+                    piecesToEat.add((targetY + 1) * BOARD_SIZE + targetX - 1);
+                    return true;
+                } //down-right
+                else if (targetY - 2 == startY && targetX + 2 == startX && pieces[(targetY - 1) * BOARD_SIZE + targetX + 1] == opponent)
+                {
+                    addPath(targetX, targetY);
+                    piecesToEat.add((targetY - 1) * BOARD_SIZE + targetX + 1);
+                    return true;
+                } //down-left
+                else if (targetY - 2 == startY && targetX - 2 == startX && pieces[(targetY - 1) * BOARD_SIZE + targetX - 1] == opponent)
+                {
+                    addPath(targetX, targetY);
+                    piecesToEat.add((targetY - 1) * BOARD_SIZE + targetX - 1);
+                    return true;
+                }
             }
         }
         return false;
     }
 
     @Override
-    public void mousePressed(MouseEvent e) {
+    public void mousePressed(MouseEvent e)
+    {
     }
 
     @Override
-    public void mouseReleased(MouseEvent e) {
+    public void mouseReleased(MouseEvent e)
+    {
     }
 
     @Override
-    public void mouseEntered(MouseEvent e) {
+    public void mouseEntered(MouseEvent e)
+    {
     }
 
     @Override
-    public void mouseExited(MouseEvent e) {
+    public void mouseExited(MouseEvent e)
+    {
     }
 
-    public boolean isYourTurn() {
+    public boolean isYourTurn()
+    {
         return yourTurn;
     }
 
-    public boolean isWon() {
+    public boolean isWon()
+    {
         return won;
     }
 
-    public boolean isOpponentWon() {
+    public boolean isOpponentWon()
+    {
         return opponentWon;
     }
 
-    public boolean isTie() {
+    public boolean isTie()
+    {
         return tie;
     }
 
-    public boolean isUnableToCommunicateWithOpponent() {
+    public boolean isUnableToCommunicateWithOpponent()
+    {
         return unableToCommunicateWithOpponent;
     }
 
-    public boolean isAccepted() {
+    public boolean isAccepted()
+    {
         return accepted;
     }
 
-    public int getSelectedPiece() {
+    public int getSelectedPiece()
+    {
         return selectedPiece;
     }
 
-    public boolean isPieceSelected() {
+    public boolean isPieceSelected()
+    {
         return pieceSelected;
+    }
+
+    public ArrayList<Integer> getPath()
+    {
+        return path;
     }
 
 }
