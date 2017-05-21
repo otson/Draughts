@@ -204,7 +204,7 @@ class Game implements Runnable, MouseListener {
                     }
                 } else {
                     if (tryToMove(x, y)) {
-                        
+
                         pieceSelected = false;
                         selectedPiece = -1;
                         yourTurn = false;
@@ -264,69 +264,42 @@ class Game implements Runnable, MouseListener {
         int targetID = targetY * BOARD_SIZE + targetX;
 
         if (pieces[targetID] == 0) {
+
             if (player_one) {
                 // no eating
                 if (targetY + 1 == startY && (targetX - 1 == startX || targetX + 1 == startX)) {
                     move(targetX, targetY);
                     return true;
                 }
-                // eating
-                //up-right
-                else if (targetY + 2 == startY && targetX + 2 == startX && pieces[(targetY + 1) * BOARD_SIZE + targetX + 1] == 2){
-                        move(targetX, targetY);
-                        pieces[(targetY + 1) * BOARD_SIZE + targetX + 1] = 0;
-                        return true;
-                }
-                //up-left
-                else if (targetY + 2 == startY && targetX - 2 == startX && pieces[(targetY + 1) * BOARD_SIZE + targetX - 1] == 2){
-                        move(targetX, targetY);
-                        pieces[(targetY + 1) * BOARD_SIZE + targetX - 1] = 0;
-                        return true;
-                }
-                //down-right
-                else if (targetY - 2 == startY && targetX + 2 == startX && pieces[(targetY - 1) * BOARD_SIZE + targetX + 1] == 2){
-                        move(targetX, targetY);
-                        pieces[(targetY - 1) * BOARD_SIZE + targetX + 1] = 0;
-                        return true;
-                }
-                //down-left
-                else if (targetY - 2 == startY && targetX - 2 == startX && pieces[(targetY - 1) * BOARD_SIZE + targetX - 1] == 2){
-                        move(targetX, targetY);
-                        pieces[(targetY - 1) * BOARD_SIZE + targetX - 1] = 0;
-                        return true;
-                }
-
             } else {
                 // no eating
                 if (targetY - 1 == startY && (targetX - 1 == startX || targetX + 1 == startX)) {
                     move(targetX, targetY);
                     return true;
                 }
-                //up-right
-                else if (targetY + 2 == startY && targetX + 2 == startX && pieces[(targetY + 1) * BOARD_SIZE + targetX + 1] == 1){
-                        move(targetX, targetY);
-                        pieces[(targetY + 1) * BOARD_SIZE + targetX + 1] = 0;
-                        return true;
-                }
-                //up-left
-                else if (targetY + 2 == startY && targetX - 2 == startX && pieces[(targetY + 1) * BOARD_SIZE + targetX - 1] == 1){
-                        move(targetX, targetY);
-                        pieces[(targetY + 1) * BOARD_SIZE + targetX - 1] = 0;
-                        return true;
-                }
-                //eating
-                //down-right
-                else if (targetY - 2 == startY && targetX + 2 == startX && pieces[(targetY - 1) * BOARD_SIZE + targetX + 1] == 1){
-                        move(targetX, targetY);
-                        pieces[(targetY - 1) * BOARD_SIZE + targetX + 1] = 0;
-                        return true;
-                }
-                //down-left
-                else if (targetY - 2 == startY && targetX - 2 == startX && pieces[(targetY - 1) * BOARD_SIZE + targetX - 1] == 1){
-                        move(targetX, targetY);
-                        pieces[(targetY - 1) * BOARD_SIZE + targetX - 1] = 0;
-                        return true;
-                }
+            }
+            // eating
+            //up-right
+            int opponent = player_one ? 2 : 1;
+            if (targetY + 2 == startY && targetX + 2 == startX && pieces[(targetY + 1) * BOARD_SIZE + targetX + 1] == opponent) {
+                move(targetX, targetY);
+                pieces[(targetY + 1) * BOARD_SIZE + targetX + 1] = 0;
+                return true;
+            } //up-left
+            else if (targetY + 2 == startY && targetX - 2 == startX && pieces[(targetY + 1) * BOARD_SIZE + targetX - 1] == opponent) {
+                move(targetX, targetY);
+                pieces[(targetY + 1) * BOARD_SIZE + targetX - 1] = 0;
+                return true;
+            } //down-right
+            else if (targetY - 2 == startY && targetX + 2 == startX && pieces[(targetY - 1) * BOARD_SIZE + targetX + 1] == opponent) {
+                move(targetX, targetY);
+                pieces[(targetY - 1) * BOARD_SIZE + targetX + 1] = 0;
+                return true;
+            } //down-left
+            else if (targetY - 2 == startY && targetX - 2 == startX && pieces[(targetY - 1) * BOARD_SIZE + targetX - 1] == opponent) {
+                move(targetX, targetY);
+                pieces[(targetY - 1) * BOARD_SIZE + targetX - 1] = 0;
+                return true;
             }
         }
         return false;
