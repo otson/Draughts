@@ -52,7 +52,6 @@ class Painter extends JPanel
     private final JFrame frame;
     private final int BOARD_SIZE;
     private int[] pieces;
-    private boolean highlightedCells[];
 
     private final Color DARK_CELL_COLOR = Color.decode("#60341f");
     private final Color LIGHT_CELL_COLOR = Color.decode("#c9b898");
@@ -80,7 +79,6 @@ class Painter extends JPanel
         this.pieces = pieces;
         this.game = game;
         addMouseListener(game);
-        highlightedCells = new boolean[BOARD_SIZE * BOARD_SIZE];
         this.setPreferredSize(new Dimension(boardSize * CELL_SIZE, boardSize * CELL_SIZE + 27));
         setFocusable(true);
         requestFocus();
@@ -101,7 +99,6 @@ class Painter extends JPanel
         frame.add(this, BorderLayout.CENTER);
         frame.add(scrollPane, BorderLayout.NORTH);
         frame.add(turnButton, BorderLayout.SOUTH);
-        //frame.setContentPane(contentPanel);
         frame.setSize(boardSize * CELL_SIZE, boardSize * CELL_SIZE + 27 + TEXT_AREA_HEIGHT + TURN_BUTTON_HEIGHT);
         frame.setLocationRelativeTo(null);
         frame.setDefaultCloseOperation(JFrame.EXIT_ON_CLOSE);
@@ -112,7 +109,6 @@ class Painter extends JPanel
     @Override
     public void paintComponent(Graphics g)
     {
-
         g.clearRect(0, 0, getWidth(), getHeight());
         // Draw board
         for (int x = 0; x < BOARD_SIZE; x++)

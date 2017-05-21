@@ -28,7 +28,6 @@ import java.net.InetAddress;
 import java.net.ServerSocket;
 import java.net.Socket;
 import java.util.ArrayList;
-import java.util.List;
 import java.util.Scanner;
 import javax.swing.JButton;
 
@@ -63,7 +62,6 @@ final class Game implements Runnable, MouseListener
     private boolean player_one = false;
 
     private int selectedPiece = -1;
-    private int cellToMoveTo = -1;
     private boolean pieceSelected = false;
     private boolean canMoveWithoutEating = false;
     private boolean canEat = false;
@@ -281,7 +279,6 @@ final class Game implements Runnable, MouseListener
                     if (isSelectablePiece(x, y))
                     {
                         selectedPiece = y * BOARD_SIZE + x;
-                        //System.out.println("Selected valid piece x: " + x + ", y: " + y);
                         pieceSelected = true;
                         path.clear();
                         path.add(selectedPiece);
@@ -345,12 +342,8 @@ final class Game implements Runnable, MouseListener
 
     private boolean tryToaddToPath(int targetX, int targetY)
     {
-
         int startX = path.get(path.size() - 1) % BOARD_SIZE;
         int startY = (int) path.get(path.size() - 1) / BOARD_SIZE;
-        //System.out.println("Start: " + startX + " " + startY);
-        //System.out.println("Target: " + targetX + " " + targetY);
-
         int targetID = targetY * BOARD_SIZE + targetX;
 
         if (pieces[targetID] == 0)
