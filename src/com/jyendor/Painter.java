@@ -130,20 +130,38 @@ class Painter extends JPanel
                 if (game.isPieceSelected())
                 {
                     g.setColor(SELECTED_CELL_COLOR);
-                    int x = game.getSelectedPiece() % BOARD_SIZE;
-                    int y = (int) game.getSelectedPiece() / BOARD_SIZE;
+
                     Graphics2D g2 = (Graphics2D) g;
                     g2.setStroke(new BasicStroke(selected_cell_border_width));
-                    g.drawRect(x * CELL_SIZE, y * CELL_SIZE, CELL_SIZE, CELL_SIZE);
+                    int x, y;
+                    if (game.isPlayer_one())
+                    {
+                        x = game.getSelectedPiece() % BOARD_SIZE;
+                        y = (int) game.getSelectedPiece() / BOARD_SIZE;
+                        g.drawRect(x * CELL_SIZE, y * CELL_SIZE, CELL_SIZE, CELL_SIZE);
+                    } else
+                    {
+                        x = BOARD_SIZE - 1 - game.getSelectedPiece() % BOARD_SIZE;
+                        y = BOARD_SIZE - 1 - (int) game.getSelectedPiece() / BOARD_SIZE;
+                        g.drawRect(x * CELL_SIZE, y * CELL_SIZE, CELL_SIZE, CELL_SIZE);
+                    }
 
                     g.setColor(PATH_COLOR);
                     for (Integer cell : game.getPath())
                     {
                         if (cell != game.getSelectedPiece())
                         {
-                            x = cell % BOARD_SIZE;
-                            y = (int) cell / BOARD_SIZE;
-                            g.drawRect(x * CELL_SIZE, y * CELL_SIZE, CELL_SIZE, CELL_SIZE);
+                            if (game.isPlayer_one())
+                            {
+                                x = cell % BOARD_SIZE;
+                                y = (int) cell / BOARD_SIZE;
+                                g.drawRect(x * CELL_SIZE, y * CELL_SIZE, CELL_SIZE, CELL_SIZE);
+                            } else
+                            {
+                                x = BOARD_SIZE - 1 - cell % BOARD_SIZE;
+                                y = BOARD_SIZE - 1 - (int) cell / BOARD_SIZE;
+                                g.drawRect(x * CELL_SIZE, y * CELL_SIZE, CELL_SIZE, CELL_SIZE);
+                            }
                         }
                     }
                 }
@@ -161,11 +179,23 @@ class Painter extends JPanel
                     if (pieces[y * BOARD_SIZE + x] == 1)
                     {
                         g.setColor(PLAYER_ONE_COLOR);
-                        g.fillOval(x * CELL_SIZE + (CELL_SIZE - PIECE_SIZE) / 2, y * CELL_SIZE + (CELL_SIZE - PIECE_SIZE) / 2, PIECE_SIZE, PIECE_SIZE);
+                        if (game.isPlayer_one())
+                        {
+                            g.fillOval(x * CELL_SIZE + (CELL_SIZE - PIECE_SIZE) / 2, y * CELL_SIZE + (CELL_SIZE - PIECE_SIZE) / 2, PIECE_SIZE, PIECE_SIZE);
+                        } else
+                        {
+                            g.fillOval((BOARD_SIZE - 1) * CELL_SIZE - x * CELL_SIZE + (CELL_SIZE - PIECE_SIZE) / 2, (BOARD_SIZE - 1) * CELL_SIZE - y * CELL_SIZE + (CELL_SIZE - PIECE_SIZE) / 2, PIECE_SIZE, PIECE_SIZE);
+                        }
                     } else if (pieces[y * BOARD_SIZE + x] == 2)
                     {
                         g.setColor(PLAYER_TWO_COLOR);
-                        g.fillOval(x * CELL_SIZE + (CELL_SIZE - PIECE_SIZE) / 2, y * CELL_SIZE + (CELL_SIZE - PIECE_SIZE) / 2, PIECE_SIZE, PIECE_SIZE);
+                        if (game.isPlayer_one())
+                        {
+                            g.fillOval(x * CELL_SIZE + (CELL_SIZE - PIECE_SIZE) / 2, y * CELL_SIZE + (CELL_SIZE - PIECE_SIZE) / 2, PIECE_SIZE, PIECE_SIZE);
+                        } else
+                        {
+                            g.fillOval((BOARD_SIZE - 1) * CELL_SIZE - x * CELL_SIZE + (CELL_SIZE - PIECE_SIZE) / 2, (BOARD_SIZE - 1) * CELL_SIZE - y * CELL_SIZE + (CELL_SIZE - PIECE_SIZE) / 2, PIECE_SIZE, PIECE_SIZE);
+                        }
                     }
                 }
             }
@@ -194,7 +224,5 @@ class Painter extends JPanel
     {
         return text;
     }
-    
-    
 
 }

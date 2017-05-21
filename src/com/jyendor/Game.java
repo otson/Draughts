@@ -271,8 +271,16 @@ final class Game implements Runnable, MouseListener
         {
             if (yourTurn && !unableToCommunicateWithOpponent && !won && !opponentWon)
             {
-                int x = e.getX() / Painter.CELL_SIZE;
-                int y = e.getY() / Painter.CELL_SIZE;
+                int x, y;
+                if (player_one)
+                {
+                    x = e.getX() / Painter.CELL_SIZE;
+                    y = e.getY() / Painter.CELL_SIZE;
+                } else
+                {
+                    x = (Painter.CELL_SIZE * (BOARD_SIZE) - e.getX()) / Painter.CELL_SIZE;
+                    y = (Painter.CELL_SIZE * (BOARD_SIZE) - e.getY()) / Painter.CELL_SIZE;
+                }
 
                 if (!pieceSelected)
                 {
@@ -467,6 +475,11 @@ final class Game implements Runnable, MouseListener
     public ArrayList<Integer> getPath()
     {
         return path;
+    }
+
+    public boolean isPlayer_one()
+    {
+        return player_one;
     }
 
 }
