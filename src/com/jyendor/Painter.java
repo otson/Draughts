@@ -58,9 +58,11 @@ class Painter extends JPanel
     private final Color PLAYER_ONE_COLOR = Color.decode("#d6b18b");
     private final Color PLAYER_TWO_COLOR = Color.decode("#281413");
     private final Color SELECTED_CELL_COLOR = Color.RED;
-    private final Color PATH_COLOR = Color.YELLOW;
+    private final Color PATH_COLOR = Color.GREEN;
+    private final Color CROWNED_COLOR = Color.YELLOW;
 
-    private int selected_cell_border_width = 3;
+    private int selected_cell_border_width = 4;
+    private final int CROWNED_BORDER_WIDTH = 3;
 
     private final Font font = new Font("Verdana", Font.BOLD, 40);
     private final Font textAreaFont = new Font("Consolas", Font.PLAIN, 14);
@@ -79,7 +81,7 @@ class Painter extends JPanel
         this.pieces = pieces;
         this.game = game;
         addMouseListener(game);
-        this.setPreferredSize(new Dimension(boardSize * CELL_SIZE, boardSize * CELL_SIZE + 27));
+        this.setPreferredSize(new Dimension(boardSize * CELL_SIZE, boardSize * CELL_SIZE + 28));
         setFocusable(true);
         requestFocus();
         setBackground(LIGHT_CELL_COLOR);
@@ -99,7 +101,7 @@ class Painter extends JPanel
         frame.add(this, BorderLayout.CENTER);
         frame.add(scrollPane, BorderLayout.NORTH);
         frame.add(turnButton, BorderLayout.SOUTH);
-        frame.setSize(boardSize * CELL_SIZE, boardSize * CELL_SIZE + 27 + TEXT_AREA_HEIGHT + TURN_BUTTON_HEIGHT);
+        frame.setSize(boardSize * CELL_SIZE, boardSize * CELL_SIZE + 28 + TEXT_AREA_HEIGHT + TURN_BUTTON_HEIGHT);
         frame.setLocationRelativeTo(null);
         frame.setDefaultCloseOperation(JFrame.EXIT_ON_CLOSE);
         frame.setResizable(false);
@@ -138,12 +140,12 @@ class Painter extends JPanel
                     {
                         x = game.getSelectedPiece() % BOARD_SIZE;
                         y = (int) game.getSelectedPiece() / BOARD_SIZE;
-                        g.drawRect(x * CELL_SIZE, y * CELL_SIZE, CELL_SIZE, CELL_SIZE);
+                        g.drawRect(x * CELL_SIZE + selected_cell_border_width / 2, y * CELL_SIZE + selected_cell_border_width / 2, CELL_SIZE - selected_cell_border_width, CELL_SIZE - selected_cell_border_width);
                     } else
                     {
                         x = BOARD_SIZE - 1 - game.getSelectedPiece() % BOARD_SIZE;
                         y = BOARD_SIZE - 1 - (int) game.getSelectedPiece() / BOARD_SIZE;
-                        g.drawRect(x * CELL_SIZE, y * CELL_SIZE, CELL_SIZE, CELL_SIZE);
+                        g.drawRect(x * CELL_SIZE + selected_cell_border_width / 2, y * CELL_SIZE + selected_cell_border_width / 2, CELL_SIZE - selected_cell_border_width, CELL_SIZE - selected_cell_border_width);
                     }
 
                     g.setColor(PATH_COLOR);
@@ -155,12 +157,12 @@ class Painter extends JPanel
                             {
                                 x = cell % BOARD_SIZE;
                                 y = (int) cell / BOARD_SIZE;
-                                g.drawRect(x * CELL_SIZE, y * CELL_SIZE, CELL_SIZE, CELL_SIZE);
+                                g.drawRect(x * CELL_SIZE + selected_cell_border_width / 2, y * CELL_SIZE + selected_cell_border_width / 2, CELL_SIZE - selected_cell_border_width, CELL_SIZE - selected_cell_border_width);
                             } else
                             {
                                 x = BOARD_SIZE - 1 - cell % BOARD_SIZE;
                                 y = BOARD_SIZE - 1 - (int) cell / BOARD_SIZE;
-                                g.drawRect(x * CELL_SIZE, y * CELL_SIZE, CELL_SIZE, CELL_SIZE);
+                                g.drawRect(x * CELL_SIZE + selected_cell_border_width / 2, y * CELL_SIZE + selected_cell_border_width / 2, CELL_SIZE - selected_cell_border_width, CELL_SIZE - selected_cell_border_width);
                             }
                         }
                     }
@@ -172,6 +174,7 @@ class Painter extends JPanel
             // Draw pieces
             Graphics2D g2 = (Graphics2D) g;
             g2.setRenderingHint(RenderingHints.KEY_ANTIALIASING, RenderingHints.VALUE_ANTIALIAS_ON);
+            g2.setStroke(new BasicStroke(CROWNED_BORDER_WIDTH));
             for (int x = 0; x < BOARD_SIZE; x++)
             {
                 for (int y = 0; y < BOARD_SIZE; y++)
@@ -182,9 +185,19 @@ class Painter extends JPanel
                         if (game.isPlayer_one())
                         {
                             g.fillOval(x * CELL_SIZE + (CELL_SIZE - PIECE_SIZE) / 2, y * CELL_SIZE + (CELL_SIZE - PIECE_SIZE) / 2, PIECE_SIZE, PIECE_SIZE);
+                            if (game.getCrowned()[y * BOARD_SIZE + x])
+                            {
+                                g.setColor(CROWNED_COLOR);
+                                g.drawOval(x * CELL_SIZE + (CELL_SIZE - PIECE_SIZE) / 2, y * CELL_SIZE + (CELL_SIZE - PIECE_SIZE) / 2, PIECE_SIZE, PIECE_SIZE);
+                            }
                         } else
                         {
                             g.fillOval((BOARD_SIZE - 1) * CELL_SIZE - x * CELL_SIZE + (CELL_SIZE - PIECE_SIZE) / 2, (BOARD_SIZE - 1) * CELL_SIZE - y * CELL_SIZE + (CELL_SIZE - PIECE_SIZE) / 2, PIECE_SIZE, PIECE_SIZE);
+                            if (game.getCrowned()[y * BOARD_SIZE + x])
+                            {
+                                g.setColor(CROWNED_COLOR);
+                                g.drawOval((BOARD_SIZE - 1) * CELL_SIZE - x * CELL_SIZE + (CELL_SIZE - PIECE_SIZE) / 2, (BOARD_SIZE - 1) * CELL_SIZE - y * CELL_SIZE + (CELL_SIZE - PIECE_SIZE) / 2, PIECE_SIZE, PIECE_SIZE);
+                            }
                         }
                     } else if (pieces[y * BOARD_SIZE + x] == 2)
                     {
@@ -192,9 +205,19 @@ class Painter extends JPanel
                         if (game.isPlayer_one())
                         {
                             g.fillOval(x * CELL_SIZE + (CELL_SIZE - PIECE_SIZE) / 2, y * CELL_SIZE + (CELL_SIZE - PIECE_SIZE) / 2, PIECE_SIZE, PIECE_SIZE);
+                            if (game.getCrowned()[y * BOARD_SIZE + x])
+                            {
+                                g.setColor(CROWNED_COLOR);
+                                g.drawOval(x * CELL_SIZE + (CELL_SIZE - PIECE_SIZE) / 2, y * CELL_SIZE + (CELL_SIZE - PIECE_SIZE) / 2, PIECE_SIZE, PIECE_SIZE);
+                            }
                         } else
                         {
                             g.fillOval((BOARD_SIZE - 1) * CELL_SIZE - x * CELL_SIZE + (CELL_SIZE - PIECE_SIZE) / 2, (BOARD_SIZE - 1) * CELL_SIZE - y * CELL_SIZE + (CELL_SIZE - PIECE_SIZE) / 2, PIECE_SIZE, PIECE_SIZE);
+                            if (game.getCrowned()[y * BOARD_SIZE + x])
+                            {
+                                g.setColor(CROWNED_COLOR);
+                                g.drawOval((BOARD_SIZE - 1) * CELL_SIZE - x * CELL_SIZE + (CELL_SIZE - PIECE_SIZE) / 2, (BOARD_SIZE - 1) * CELL_SIZE - y * CELL_SIZE + (CELL_SIZE - PIECE_SIZE) / 2, PIECE_SIZE, PIECE_SIZE);
+                            }
                         }
                     }
                 }

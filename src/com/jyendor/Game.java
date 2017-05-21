@@ -39,8 +39,9 @@ final class Game implements Runnable, MouseListener
 {
 
     private final Painter painter;
-    private final int BOARD_SIZE = 8;
+    private final int BOARD_SIZE = 5;
     private int[] pieces = new int[BOARD_SIZE * BOARD_SIZE];
+    private boolean[] crowned = new boolean[BOARD_SIZE * BOARD_SIZE];
     private final Thread thread;
 
     private boolean useDefaultIpAndPort = true;
@@ -235,7 +236,10 @@ final class Game implements Runnable, MouseListener
         {
             public void actionPerformed(ActionEvent e)
             {
-                endTurnButtonPressed();
+                if (yourTurn)
+                {
+                    endTurnButtonPressed();
+                }
             }
         });
     }
@@ -289,6 +293,7 @@ final class Game implements Runnable, MouseListener
                         selectedPiece = y * BOARD_SIZE + x;
                         pieceSelected = true;
                         path.clear();
+                        piecesToEat.clear();
                         path.add(selectedPiece);
                         canMoveWithoutEating = true;
                         canEat = true;
@@ -325,12 +330,40 @@ final class Game implements Runnable, MouseListener
             pieces[selectedPiece] = 0;
             int playerNumber = player_one ? 1 : 2;
             pieces[path.get(path.size() - 1)] = playerNumber;
+            int x1 = selectedPiece % BOARD_SIZE;
+            int y1 = (int) selectedPiece / BOARD_SIZE;
+            int x2 = path.get(path.size() - 1) % BOARD_SIZE;
+            int y2 = (int) path.get(path.size() - 1) / BOARD_SIZE;
+
+            addMessage(String.format("Piece x: %d y: %d moving to x: %d y: %d", x1, y1, x2, y2));
+            if (crowned[selectedPiece])
+            {
+                crowned[selectedPiece] = false;
+                crowned[path.get(path.size() - 1)] = true;
+            }
+            if (player_one)
+            {
+                if ((int) path.get(path.size() - 1) / BOARD_SIZE == 0)
+                {
+                    addMessage("The piece was crowned.");
+                    crowned[path.get(path.size() - 1)] = true;
+                }
+            } else
+            {
+                if ((int) path.get(path.size() - 1) / BOARD_SIZE == BOARD_SIZE - 1)
+                {
+                    addMessage("The piece was crowned.");
+                    crowned[path.get(path.size() - 1)] = true;
+                }
+            }
             if (!piecesToEat.isEmpty())
             {
                 for (int pieceToEat : piecesToEat)
                 {
+                    addMessage("Ate a piece.");
                     pieces[pieceToEat] = 0;
                 }
+                piecesToEat.clear();
             }
         }
     }
@@ -366,6 +399,14 @@ final class Game implements Runnable, MouseListener
                         canEat = false;
                         addPath(targetX, targetY);
                         return true;
+                    } else if (crowned[selectedPiece])
+                    {
+                        if (targetY - 1 == startY && (targetX - 1 == startX || targetX + 1 == startX))
+                        {
+                            canEat = false;
+                            addPath(targetX, targetY);
+                            return true;
+                        }
                     }
                 } else
                 {
@@ -375,6 +416,14 @@ final class Game implements Runnable, MouseListener
                         canEat = false;
                         addPath(targetX, targetY);
                         return true;
+                    } else if (crowned[selectedPiece])
+                    {
+                        if (targetY + 1 == startY && (targetX - 1 == startX || targetX + 1 == startX))
+                        {
+                            canEat = false;
+                            addPath(targetX, targetY);
+                            return true;
+                        }
                     }
                 }
             }
@@ -482,4 +531,8 @@ final class Game implements Runnable, MouseListener
         return player_one;
     }
 
+    public boolean[] getCrowned()
+    {
+        return crowned;
+    }
 }
