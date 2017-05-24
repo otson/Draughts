@@ -39,7 +39,7 @@ final class Game implements Runnable, MouseListener
 {
 
     private final Painter painter;
-    private final int BOARD_SIZE = 5;
+    private final int BOARD_SIZE = 8;
     private int[] pieces = new int[BOARD_SIZE * BOARD_SIZE];
     private boolean[] crowned = new boolean[BOARD_SIZE * BOARD_SIZE];
     private final Thread thread;
@@ -84,14 +84,20 @@ final class Game implements Runnable, MouseListener
                 port = scanner.nextInt();
             }
         }
+        thread = new Thread(this, "Draughts");
         painter = new Painter(BOARD_SIZE, pieces, this);
-        addButtonListener(painter.getTurnButton());
+        addTurnButtonListener(painter.getTurnButton());
+    }
+    
+    public void startGame(String ip, int port){
+        this.ip = ip;
+        this.port = port;
         if (!connect())
         {
             initializeServer();
         }
         painter.repaint();
-        thread = new Thread(this, "Draughts");
+        
         thread.start();
     }
 
@@ -230,7 +236,7 @@ final class Game implements Runnable, MouseListener
         }
     }
 
-    public void addButtonListener(JButton button)
+    public void addTurnButtonListener(JButton button)
     {
         button.addActionListener(new ActionListener()
         {
@@ -243,6 +249,8 @@ final class Game implements Runnable, MouseListener
             }
         });
     }
+    
+    
 
     private void endTurnButtonPressed()
     {

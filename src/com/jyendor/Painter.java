@@ -23,13 +23,20 @@ import java.awt.Dimension;
 import java.awt.Font;
 import java.awt.Graphics;
 import java.awt.Graphics2D;
+import java.awt.GridBagConstraints;
+import java.awt.GridBagLayout;
+import java.awt.GridLayout;
 import java.awt.RenderingHints;
+import java.awt.event.ActionEvent;
+import java.awt.event.ActionListener;
 import javax.swing.BorderFactory;
 import javax.swing.JButton;
 import javax.swing.JFrame;
+import javax.swing.JLabel;
 import javax.swing.JPanel;
 import javax.swing.JScrollPane;
 import javax.swing.JTextArea;
+import javax.swing.JTextField;
 import javax.swing.border.Border;
 
 /**
@@ -45,6 +52,15 @@ class Painter extends JPanel
     private JTextArea text = new JTextArea();
     private JScrollPane scrollPane = new JScrollPane(text);
     private JButton turnButton = new JButton("Confirm movement / End turn");
+
+    private JTextField ipTextField = new JTextField();
+    private JTextField portTextField = new JTextField();
+    private JButton setIpAndPortButton = new JButton("Connect / Start Server");
+    private JLabel portErrorLabel = new JLabel();
+    private JPanel ipPortButtonJPanel;
+    private final int IP_PORT_BUTTON_HEIGHT = 80;
+    GridBagConstraints c = new GridBagConstraints();
+
     public static final int CELL_SIZE = 80;
     private final int PIECE_SIZE = 60;
     private final int TEXT_AREA_HEIGHT = 80;
@@ -67,6 +83,7 @@ class Painter extends JPanel
     private final Font font = new Font("Verdana", Font.BOLD, 40);
     private final Font textAreaFont = new Font("Consolas", Font.PLAIN, 14);
 
+    private String wrongPortString = "Invalid port.";
     private String waitingString = "Waiting for another player";
     private String unableToCommunicateWithOpponentString = "Unable to communicate with opponent";
     private String wonString = "You won!";
@@ -89,23 +106,62 @@ class Painter extends JPanel
         scrollPane.setPreferredSize(new Dimension(boardSize * CELL_SIZE, TEXT_AREA_HEIGHT));
         text.setLineWrap(true);
         text.setEditable(false);
-
         Border border = BorderFactory.createLineBorder(Color.BLACK);
         text.setBorder(border);
         text.setFont(textAreaFont);
-
         turnButton.setPreferredSize(new Dimension(boardSize * CELL_SIZE, TURN_BUTTON_HEIGHT));
 
+        ipPortButtonJPanel = new JPanel(new GridLayout(6, 1));
+        ipPortButtonJPanel.add(new JLabel("IP: "));
+        ipPortButtonJPanel.add(ipTextField);
+        ipPortButtonJPanel.add(new JLabel("Port: "));
+        ipPortButtonJPanel.add(portTextField);
+        ipPortButtonJPanel.add(portErrorLabel);
+        portErrorLabel.setForeground(Color.RED);
+        ipPortButtonJPanel.add(setIpAndPortButton);
+        addIpPortButtonListener(setIpAndPortButton);
+        c.fill = GridBagConstraints.HORIZONTAL;
+        c.ipadx = 200;
+
         frame = new JFrame(TITLE);
-        frame.setLayout(new BorderLayout());
-        frame.add(this, BorderLayout.CENTER);
-        frame.add(scrollPane, BorderLayout.NORTH);
-        frame.add(turnButton, BorderLayout.SOUTH);
         frame.setSize(boardSize * CELL_SIZE, boardSize * CELL_SIZE + 28 + TEXT_AREA_HEIGHT + TURN_BUTTON_HEIGHT);
         frame.setLocationRelativeTo(null);
         frame.setDefaultCloseOperation(JFrame.EXIT_ON_CLOSE);
         frame.setResizable(false);
         frame.setVisible(true);
+        switchToIpPortView();
+    }
+
+    private void switchToIpPortView()
+    {
+        if (frame.isAncestorOf(this))
+        {
+            frame.remove(this);
+        }
+        if (frame.isAncestorOf(scrollPane))
+        {
+            frame.remove(scrollPane);
+        }
+        if (frame.isAncestorOf(turnButton))
+        {
+            frame.remove(turnButton);
+        }
+        frame.setLayout(new GridBagLayout());
+        frame.add(ipPortButtonJPanel, c);
+    }
+
+    private void switchToGameView()
+    {
+        if (frame.isAncestorOf(ipPortButtonJPanel))
+        {
+            frame.remove(ipPortButtonJPanel);
+        }
+        frame.setLayout(new BorderLayout());
+        frame.add(this, BorderLayout.CENTER);
+        frame.add(scrollPane, BorderLayout.NORTH);
+        frame.add(turnButton, BorderLayout.SOUTH);
+        frame.revalidate();
+        frame.repaint();
     }
 
     @Override
@@ -246,6 +302,36 @@ class Painter extends JPanel
     public JTextArea getText()
     {
         return text;
+    }
+
+    public void addIpPortButtonListener(JButton button)
+    {
+        button.addActionListener(new ActionListener()
+        {
+            public void actionPerformed(ActionEvent e)
+            {
+                int givenPort = 0;
+                try
+                {
+                    givenPort = Integer.parseInt(portTextField.getText());
+                } catch (Exception e1)
+                {
+                    System.out.println(portTextField.getText());
+                    portTextField.setText("");
+                    portErrorLabel.setText(wrongPortString);
+                }
+                if (givenPort < 1 || givenPort > 65535)
+                {
+
+                    portTextField.setText("");
+                    portErrorLabel.setText(wrongPortString);
+                }
+                else{
+                    switchToGameView();
+                    game.startGame(ipTextField.getText(), givenPort);
+                }
+            }
+        });
     }
 
 }
