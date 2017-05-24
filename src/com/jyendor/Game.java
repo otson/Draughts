@@ -24,11 +24,14 @@ import java.awt.event.MouseListener;
 import java.io.IOException;
 import java.io.ObjectInputStream;
 import java.io.ObjectOutputStream;
+import static java.lang.Thread.sleep;
 import java.net.InetAddress;
 import java.net.ServerSocket;
 import java.net.Socket;
 import java.util.ArrayList;
 import java.util.Scanner;
+import java.util.logging.Level;
+import java.util.logging.Logger;
 import javax.swing.JButton;
 
 /**
@@ -39,7 +42,7 @@ final class Game implements Runnable, MouseListener
 {
 
     private final Painter painter;
-    private final int BOARD_SIZE = 5;
+    private final int BOARD_SIZE = 8;
     private int[] pieces = new int[BOARD_SIZE * BOARD_SIZE];
     private boolean[] crowned = new boolean[BOARD_SIZE * BOARD_SIZE];
     private final Thread thread;
@@ -123,6 +126,11 @@ final class Game implements Runnable, MouseListener
             if (player_one && !accepted)
             {
                 listenForServerRequest();
+            }
+            try {    
+                sleep(17);
+            } catch (InterruptedException ex) {
+                Logger.getLogger(Game.class.getName()).log(Level.SEVERE, null, ex);
             }
         }
 
