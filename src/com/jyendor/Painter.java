@@ -285,7 +285,28 @@ class Painter extends JPanel
             Graphics2D g2 = (Graphics2D) g;
             g2.setRenderingHint(RenderingHints.KEY_TEXT_ANTIALIASING, RenderingHints.VALUE_TEXT_ANTIALIAS_DEFAULT);
             int stringWidth = g2.getFontMetrics().stringWidth(waitingString);
-            g.drawString(waitingString, BOARD_SIZE * CELL_SIZE / 2 - stringWidth / 2, BOARD_SIZE * CELL_SIZE / 2);
+            if (!game.isAccepted())
+            {
+                g.drawString(waitingString, BOARD_SIZE * CELL_SIZE / 2 - stringWidth / 2, BOARD_SIZE * CELL_SIZE / 2);
+            }
+        }
+
+        if (game.isWon())
+        {
+            g.setColor(Color.RED);
+            g.setFont(font);
+            Graphics2D g2 = (Graphics2D) g;
+            g2.setRenderingHint(RenderingHints.KEY_TEXT_ANTIALIASING, RenderingHints.VALUE_TEXT_ANTIALIAS_DEFAULT);
+            int stringWidth = g2.getFontMetrics().stringWidth(wonString);
+            g.drawString(wonString, BOARD_SIZE * CELL_SIZE / 2 - stringWidth / 2, BOARD_SIZE * CELL_SIZE / 2);
+        } else if (game.isOpponentWon())
+        {
+            g.setColor(Color.RED);
+            g.setFont(font);
+            Graphics2D g2 = (Graphics2D) g;
+            g2.setRenderingHint(RenderingHints.KEY_TEXT_ANTIALIASING, RenderingHints.VALUE_TEXT_ANTIALIAS_DEFAULT);
+            int stringWidth = g2.getFontMetrics().stringWidth(opponentWonString);
+            g.drawString(opponentWonString, BOARD_SIZE * CELL_SIZE / 2 - stringWidth / 2, BOARD_SIZE * CELL_SIZE / 2);
         }
     }
 
@@ -325,8 +346,8 @@ class Painter extends JPanel
 
                     portTextField.setText("");
                     portErrorLabel.setText(wrongPortString);
-                }
-                else{
+                } else
+                {
                     switchToGameView();
                     game.startGame(ipTextField.getText(), givenPort);
                 }

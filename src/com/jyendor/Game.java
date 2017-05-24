@@ -39,13 +39,11 @@ final class Game implements Runnable, MouseListener
 {
 
     private final Painter painter;
-    private final int BOARD_SIZE = 8;
+    private final int BOARD_SIZE = 5;
     private int[] pieces = new int[BOARD_SIZE * BOARD_SIZE];
     private boolean[] crowned = new boolean[BOARD_SIZE * BOARD_SIZE];
     private final Thread thread;
 
-    private boolean useDefaultIpAndPort = true;
-    private Scanner scanner = new Scanner(System.in);
     private String ip = "localhost";
     private int port = 55554;
 
@@ -73,23 +71,13 @@ final class Game implements Runnable, MouseListener
 
     public Game()
     {
-        if (!useDefaultIpAndPort)
-        {
-            ip = scanner.nextLine();
-            System.out.println("Please input the port: ");
-            port = scanner.nextInt();
-            while (port < 1 || port > 65535)
-            {
-                System.out.println("The port you entered is invalid, please enter another port: ");
-                port = scanner.nextInt();
-            }
-        }
         thread = new Thread(this, "Draughts");
         painter = new Painter(BOARD_SIZE, pieces, this);
         addTurnButtonListener(painter.getTurnButton());
     }
-    
-    public void startGame(String ip, int port){
+
+    public void startGame(String ip, int port)
+    {
         this.ip = ip;
         this.port = port;
         if (!connect())
@@ -97,7 +85,6 @@ final class Game implements Runnable, MouseListener
             initializeServer();
         }
         painter.repaint();
-        
         thread.start();
     }
 
@@ -176,17 +163,41 @@ final class Game implements Runnable, MouseListener
 
     private void checkForWin()
     {
-
+        int opponentPieces = 0;
+        int opponent = player_one ? 2 : 1;
+        for (int piece : pieces)
+        {
+            if (piece == opponent)
+            {
+                opponentPieces++;
+            }
+        }
+        if (opponentPieces == 0)
+        {
+            won = true;
+        }
     }
 
     private void checkForOpponentWin()
     {
-
+        int ownPieces = 0;
+        int playerNumber = player_one ? 1 : 2;
+        for (int piece : pieces)
+        {
+            if (piece == playerNumber)
+            {
+                ownPieces++;
+            }
+        }
+        if (ownPieces == 0)
+        {
+            opponentWon = true;
+        }
     }
 
     private void checkForTie()
     {
-
+        // Not yet implemented
     }
 
     private boolean connect()
@@ -249,31 +260,30 @@ final class Game implements Runnable, MouseListener
             }
         });
     }
-    
-    
 
     private void endTurnButtonPressed()
     {
-        System.out.println("Ending turn...");
-        move();
-        pieceSelected = false;
-        selectedPiece = -1;
-        yourTurn = false;
-        painter.repaint();
-        Toolkit.getDefaultToolkit().sync();
-        try
+        if (yourTurn && !unableToCommunicateWithOpponent && !won && !opponentWon)
         {
-            oos.writeObject(pieces);
-            oos.flush();
-            System.out.println("DATA WAS SENT");
-        } catch (IOException e1)
-        {
-            errors++;
-            e1.printStackTrace();
+            move();
+            pieceSelected = false;
+            selectedPiece = -1;
+            yourTurn = false;
+            painter.repaint();
+            Toolkit.getDefaultToolkit().sync();
+            try
+            {
+                oos.writeObject(pieces);
+                oos.flush();
+            } catch (IOException e1)
+            {
+                errors++;
+                e1.printStackTrace();
+            }
+            path.clear();
+            checkForWin();
+            checkForTie();
         }
-        path.clear();
-        checkForWin();
-        checkForTie();
     }
 
     @Override
@@ -360,7 +370,8 @@ final class Game implements Runnable, MouseListener
             {
                 if ((int) path.get(path.size() - 1) / BOARD_SIZE == BOARD_SIZE - 1)
                 {
-                    addMessage("The piece was crowned.");
+                    if(!crowned[path.get(path.size() - 1)])
+                        addMessage("The piece was crowned.");
                     crowned[path.get(path.size() - 1)] = true;
                 }
             }
